@@ -2,22 +2,21 @@
 
 #defining parameters
 type=
-short_read_se=
-long_read=
-short_read_forward=
-short_read_reverse=
+short_reads_se=
+long_reads=
+short_reads_forward=
+short_reads_reverse=
 
 if [[ $# -eq 6 ]] ; then echo "Enter the required argument"; exit 1; fi
  
 
-#a help menu showing how to use the script and what the expected arguments are.
+#a help menu showing how to use the script and what are the required arguments are.
 usage(){
 cat << EOF
 ${0} -se short_single_end.fastq -l long_reads.fastq -pe forward_short.fastq reverse_short.fastq 
  please specify:
  --> single end short reads with the flag -se 
- --> paired end short reads with the flag -pe s
- --> long reads path with the flag -l
+ --> paired end short reads with the flag -pe 
  --> type of the short reads if they are single or paired end with the flag -t
 
 EOF
@@ -38,8 +37,10 @@ do
 		type=pe
 		short_reads_forward="${2:-}"
 		short_reads_reverse="${3:-}"
+
 		#check if -t flag has been given a value or not
 		([[ -z "$short_reads_forward" ]] || [[ -z "$short_reads_reverse" ]]) &&          \                                        printf "%s must have a value\n\n" "$1" 1>&2 && usage 1>&2 && exit 1
+
 		#check if -t flag have been given the correct argument
 	        [[ ! -f $short_reads_forward || $short_reads_forward !== (*.fastq|*.fastq.gz) ]] &&  \                                    echo 'must be a fastq file' && exit 1
                 
@@ -49,8 +50,10 @@ do
                 #set the value to
 	        type=se	
 		short_reads_se="${2:-}"
+
 	        #check if -s flag has been given a value or not
-		[[ -z $short_reads_se ]] && printf "%s -s must have a value and be a viable file path\n\n" 1>&2 && exit 
+		[[ -z $short_reads_se ]] && printf "%s -s must have a value and be a viable file path\n\n" 1>&2 && exit
+
 		#check if -s has been given a viable path to fastq files
 		[[ ! -f $short_reads_se || $short_reads_se !== (*.fastq|*.fastq.gz) ]] && printf  \                                           "%s must be a fastq file\n\n" && exit 1	 
 
@@ -60,8 +63,10 @@ do
 	   -l)
 	     #set the value to
 	     long_reads="${2:-}"
+
 	     #check if the -t has been given a value or not
 	     [[ -z $long_reads ]] && printf "%s -l must have a value and be a viable path\n\n" >&2 && exit 1
+
 	     #check if -l has been given a viable path to fastq files
 	     [[ ! -f $long_reads || $long_reads !== (*.fastq|*.fastq.gz) ]] && printf \
 		     "%s must be a fastq file\n\n" && exit 1
@@ -111,3 +116,30 @@ else
 	trimming_se
 done
 
+#checking quality base of ONT using NanoPlot:
+
+nanoplot_qc(){
+
+NanoPlot --fastq "$long_reads"	-o qc_nanoplot_report
+
+}
+
+nanoplot_qc
+
+#Adaptor removal and demultiplexing with Porechore:
+
+adaptor_removal(){
+
+porechop -i "$long_reads" -b demultiplex_output
+
+}
+
+adaptor_removal
+
+#trimming and filtering of nanopore:
+
+trimming_filtering(){
+
+NanoFilt  -l 500 -q 6 -headcrop 10	
+
+}
