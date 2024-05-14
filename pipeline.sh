@@ -27,59 +27,59 @@ EOF
 while [[ $# -gt 0 ]]
 do
 	case "$1" in 
-           -h|--help|help)
-		   usage
+	
+     -h|--help|help)
+		    usage
                 
-		exit 1
-       	        ;;
+		    exit 1
+        ;;
 	   -pe)
-		#set the value of of type so we can use later in the script
-		type=pe
-		short_reads_forward="${2:-}"
-		short_reads_reverse="${3:-}"
+		    #set the value of of type so we can use later in the script
+	     	type=pe
+		    short_reads_forward="${2:-}"
+	    	short_reads_reverse="${3:-}"
 
-		#check if -t flag has been given a value or not
-		([[ -z "$short_reads_forward" ]] || [[ -z "$short_reads_reverse" ]]) &&          \                                        printf "%s must have a value\n\n" "$1" 1>&2 && usage 1>&2 && exit 1
+		    #check if -t flag has been given a value or not
+	     	([[ -z "$short_reads_forward" ]] || [[ -z "$short_reads_reverse" ]]) && printf "%s must have a value\n\n" "$1" 1>&2 && \             usage 1>&2 && exit 1
 
-		#check if -t flag have been given the correct argument
-	        [[ ! -f $short_reads_forward || $short_reads_forward !== (*.fastq|*.fastq.gz) ]] &&  \                                    echo 'must be a fastq file' && exit 1
+	     	#check if -t flag have been given the correct argument
+	      [[ ! -f $short_reads_forward || $short_reads_forward !== (*.fastq|*.fastq.gz) ]] && echo 'must be a fastq file' && exit 1
                 
-		shift 3
-		;;
+		    shift 3
+		    ;;
 	   -se)
-                #set the value to
-	        type=se	
-		short_reads_se="${2:-}"
+        #set the value to
+	      type=se	
+		    short_reads_se="${2:-}"
 
-	        #check if -s flag has been given a value or not
-		[[ -z $short_reads_se ]] && printf "%s -s must have a value and be a viable file path\n\n" 1>&2 && exit
+	      #check if -s flag has been given a value or not
+	    	[[ -z $short_reads_se ]] && printf "%s -s must have a value and be a viable file path\n\n" 1>&2 && exit
 
-		#check if -s has been given a viable path to fastq files
-		[[ ! -f $short_reads_se || $short_reads_se !== (*.fastq|*.fastq.gz) ]] && printf  \                                           "%s must be a fastq file\n\n" && exit 1	 
+	    	#check if -s has been given a viable path to fastq files
+		    [[ ! -f $short_reads_se || $short_reads_se !== (*.fastq|*.fastq.gz) ]] && printf "%s must be a fastq file\n\n" && exit 1	 
 
-		shift 2
+		    shift 2
 
-		;;
+		    ;;
 	   -l)
-	     #set the value to
-	     long_reads="${2:-}"
+	      #set the value to
+	      long_reads="${2:-}"
 
-	     #check if the -t has been given a value or not
-	     [[ -z $long_reads ]] && printf "%s -l must have a value and be a viable path\n\n" >&2 && exit 1
+	      #check if the -t has been given a value or not
+	      [[ -z $long_reads ]] && printf "%s -l must have a value and be a viable path\n\n" >&2 && exit 1
 
-	     #check if -l has been given a viable path to fastq files
-	     [[ ! -f $long_reads || $long_reads !== (*.fastq|*.fastq.gz) ]] && printf \
-		     "%s must be a fastq file\n\n" && exit 1
+	      #check if -l has been given a viable path to fastq files
+	      [[ ! -f $long_reads || $long_reads !== (*.fastq|*.fastq.gz) ]] && printf "%s must be a fastq file\n\n" && exit 1
 	     
-	     shift 2
+	      shift 2
 
-	        ;;
+	      ;;
 	    *)
-	     printf "%s enter a valid option\n\n" >&2 && usage >&2 && exit 1
+	      printf "%s enter a valid option\n\n" >&2 && usage >&2 && exit 1
 	       
-	        ;;
+	      ;;
 
-       esac 
+  esac 
 
 done
 
@@ -138,8 +138,8 @@ adaptor_removal
 
 #trimming and filtering of nanopore:
 
-trimming_filtering(){
-
-NanoFilt  -l 500 -q 6 -headcrop 10	
-
-}
+for file in demultiplex_output/*/*
+do
+   gunzip -c $file | NanoFilt -l 500 -q 6 -headcrop 10 >trimmed_${file##*/}
+done
+	 
