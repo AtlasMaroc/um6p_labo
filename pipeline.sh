@@ -11,7 +11,7 @@ long_reads=
 short_reads_forward=
 short_reads_reverse=
 
-if [[ $# -lt 6 ]] ; then echo "Enter the required argument"; exit 1; fi
+if [[ $# -eq 0 ]] ; then echo "Enter the required argument"; exit 1; fi
  
 
 #a help menu showing how to use the script and what are the required arguments are.
@@ -19,12 +19,13 @@ usage(){
 cat << EOF
 ${0} -se short_single_end.fastq -l long_reads.fastq -pe forward_short.fastq reverse_short.fastq --minlen --headcrop --qbase --nanolen  
  please specify:
---> -se: single end short reads with the flag 
---> -pe: paired end short reads with the flag  
---> --minlen: minimum read length for trimming short reads 
---> --headcrop: number of nucleotide to be trimmed from the start of the read 
---> --qbase: the value of the average read quality score to be filtered based on 
---> --nanolen: minimum read length for long reads to be filtered on
+--> single end short reads with the flag -se 
+--> paired end short reads with the flag -pe 
+--> --minlen: minimum length for filtering short reads
+--> --headcrop: numbre of nucleotide to trimm from the start of the long reads
+--> --qbase: average read quality score to filter based on
+--> --nanolen: minumim length for filtering long reads
+ 
 EOF
 }
 
@@ -70,7 +71,7 @@ do
 		([[ -z "$short_reads_forward" ]] || [[ -z "$short_reads_reverse" ]]) &&          \                                        printf "%s must have a value\n\n" "$1" 1>&2 && usage 1>&2 && exit 1
 
 		#check if -t flag have been given the correct argument
-	        [[ ! -f $short_reads_forward || ! $short_reads_forward =~ \.(fastq|fastq\.gz)$ ]] &&  \                                    echo 'must be a fastq file' && exit 1
+	        [[ ! -f $short_reads_forward ||  ! $short_reads_forward =~ \.(fastq|fastq\.gz)$ ]] &&  \                                    echo 'must be a fastq file' && exit 1
                 
 		shift 3
 		;;
@@ -122,8 +123,8 @@ trimming_pe_default(){
 
 #trimming single end reads:
 
-trimming_se(){
-         java -jar trimmomatic-0.35.jar SE -phred33 "$short_reads_se" trimmed_${short_reads_se##*/} ILLUMINACLIP:TruSeq3-SE:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:"$minlen"
+trimming_se(){ 
+         java -jar trimmomatic-0.39.jar SE -phred33  $short_reads_se trimmed_${short_reads_se##*/} ILLUMINACLIP:TruSeq3-SE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:"$minlen"
 
 }
 
@@ -136,6 +137,7 @@ else
 	trimming_se
 fi
 
+#checking quality base of ONT using NanoPlot:
 
 
 #Adaptor removal and demultiplexing with Porechore:
@@ -152,5 +154,8 @@ adaptor_removal
 
 for file in demultiplex_longreads/*
 do
+
 NanoFilt  -l "$nanolen" -q "$qbase" --headcrop "$headcrop" "$file"
+
 done
+
