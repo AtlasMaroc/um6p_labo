@@ -15,6 +15,6 @@ Quality Control Parameters:
 
 Output:
 The script will create a:
-    demultiplexed_reads/
+   * demultiplexed_reads/
         ├── long_reads_filtered.fastq
-    Trimmed short reads files named trimmed_{file.name}.
+   * Trimmed short reads files named trimmed_{file.name}.
